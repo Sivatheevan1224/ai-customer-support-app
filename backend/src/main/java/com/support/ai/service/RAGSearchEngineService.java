@@ -72,9 +72,9 @@ public class RAGSearchEngineService {
                 .sorted(Comparator.comparingDouble((ArticleMatch match) -> match.getScore()).reversed())
                 .collect(Collectors.toList());
 
-        if (scoredArticles.isEmpty()) {
+        if (scoredArticles.isEmpty() || scoredArticles.get(0).getScore() < 0.45) {
             return RAGResult.builder()
-                    .answer("I'm not completely certain about the answer to that based on our documentation. Let me open a support ticket for an agent to assist you right away!")
+                    .answer("I couldn't find a direct match for that in our documentation. You can ask about our Knowledge Base topics (Password Reset, Billing, API Limits), or connect with a support representative.")
                     .confidenceScore(0.3)
                     .requiresEscalation(true)
                     .referencedArticles(Collections.emptyList())
