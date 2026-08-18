@@ -208,11 +208,10 @@ export default function AiChatWidget() {
             </div>
 
             <div
-              className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed ${
-                msg.sender === 'user'
+              className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed ${msg.sender === 'user'
                   ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-600/20'
                   : 'bg-slate-800/90 text-slate-200 border border-slate-700/60 rounded-bl-none shadow-sm'
-              }`}
+                }`}
             >
               <div className="whitespace-pre-wrap">{msg.text}</div>
 
