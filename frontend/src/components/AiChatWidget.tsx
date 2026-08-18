@@ -78,8 +78,8 @@ export default function AiChatWidget() {
         ...updatedWithUser,
         {
           sender: 'ai' as const,
-          text: 'I checked our Knowledge Base for: "' + userText + '". For instant password reset, click "Forgot Password" on the login screen. Or click below to escalate to a live agent!',
-          confidence: 0.85,
+          text: 'I could not reach our Knowledge Base backend server right now. You can check our Knowledge Base articles or click below to escalate your question to a live support agent!',
+          confidence: 0.3,
         },
       ]);
     } finally {
