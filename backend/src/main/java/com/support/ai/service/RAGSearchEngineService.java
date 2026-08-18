@@ -55,6 +55,16 @@ public class RAGSearchEngineService {
                     .build();
         }
 
+        String conversationalAnswer = checkConversationalIntent(userQuery);
+        if (conversationalAnswer != null) {
+            return RAGResult.builder()
+                    .answer(conversationalAnswer)
+                    .confidenceScore(0.95)
+                    .requiresEscalation(false)
+                    .referencedArticles(Collections.emptyList())
+                    .build();
+        }
+
         List<KnowledgeArticle> articles = articleRepository.findByIsPublishedTrue();
         if (articles.isEmpty()) {
             return RAGResult.builder()
@@ -234,10 +244,43 @@ public class RAGSearchEngineService {
         return clean.equals("hi") || clean.equals("hello") || clean.equals("hey") || 
                clean.equals("hi there") || clean.equals("hello there") || clean.equals("greetings") ||
                clean.equals("good morning") || clean.equals("good afternoon") || clean.equals("good evening") ||
-               clean.equals("help") || clean.equals("hey there") || clean.equals("how are you") ||
-               clean.equals("are you ok") || clean.equals("are you okay") || clean.equals("who are you") ||
-               clean.equals("what is your name") || clean.equals("are you a bot") || clean.equals("are you ai") ||
-               clean.equals("what can you do") || clean.equals("thank you") || clean.equals("thanks");
+               clean.equals("help") || clean.equals("hey there");
+    }
+
+    private String checkConversationalIntent(String query) {
+        if (query == null) return null;
+        String clean = query.toLowerCase().replaceAll("[^a-z0-9 ]", "").trim();
+
+        if (clean.contains("what are you doing") || clean.contains("what is your job") || 
+            clean.contains("what is your purpose") || clean.contains("why are you here") ||
+            clean.contains("what do you do") || clean.contains("who are you") || clean.contains("what is this")) {
+            return "I am Nexus AI, your 24/7 AI Support Assistant! I am here to help you search our Knowledge Base, answer technical and billing questions, or connect you with a live support representative whenever you need help.";
+        }
+
+        if (clean.contains("what can you do") || clean.contains("what topics") || 
+            clean.contains("how can you help") || clean.contains("what can i ask") ||
+            clean.contains("help me")) {
+            return "I can assist you with a wide range of topics, including:\n\n" +
+                   "- 🔑 **Password Reset & Login Security**\n" +
+                   "- 💳 **Subscriptions & Billing Invoices**\n" +
+                   "- 🔌 **API Keys & Rate Limit Documentation**\n" +
+                   "- 📑 **Refunds & Subscription Cancellations**\n\n" +
+                   "Feel free to ask a specific question or ask for live agent help!";
+        }
+
+        if (clean.contains("specific things") || clean.contains("all things") || clean.contains("tell me more") || clean.contains("anything else")) {
+            return "You can ask me either specific questions (e.g., 'How do I generate an API key?') or explore general topics! If you ever need personal assistance, I can also open a support ticket for a human agent to review.";
+        }
+
+        if (clean.contains("are you working") || clean.contains("are you online") || clean.contains("is this live")) {
+            return "Yes! I am online and actively monitoring our Knowledge Base to help you right now.";
+        }
+
+        if (clean.contains("thank you") || clean.contains("thanks") || clean.contains("great thanks") || clean.contains("awesome")) {
+            return "You're very welcome! Let me know if you need help with anything else. Have a wonderful day!";
+        }
+
+        return null;
     }
 
     public static class ArticleMatch {
