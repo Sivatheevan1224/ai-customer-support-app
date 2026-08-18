@@ -140,6 +140,14 @@ public class RAGSearchEngineService {
     }
 
     private String generateResponseText(String query, KnowledgeArticle article, double confidence) {
+        if ("gemini".equalsIgnoreCase(aiProvider) && apiKey != null && !apiKey.isEmpty() && !apiKey.contains("demo-key")) {
+            String prompt = "You are an AI customer support assistant. Based on this Knowledge Base article titled '" + article.getTitle() + "' with content:\n" + article.getContent() + "\n\nUser Question: " + query + "\n\nProvide a helpful, friendly, and concise support answer.";
+            String geminiAnswer = callGeminiApi(prompt);
+            if (geminiAnswer != null && !geminiAnswer.trim().isEmpty()) {
+                return geminiAnswer + "\n\n*(Powered by Google Gemini)*";
+            }
+        }
+
         StringBuilder sb = new StringBuilder();
 
         sb.append("Based on our Knowledge Base article **\"").append(article.getTitle()).append("\"**:\n\n");
@@ -159,6 +167,54 @@ public class RAGSearchEngineService {
         }
 
         return sb.toString();
+    }
+
+    private String callGeminiApi(String prompt) {
+        try {
+            String targetModel = (aiModel != null && !aiModel.isEmpty()) ? aiModel : "gemini-1.5-flash";
+            String urlString = "https://generativelanguage.googleapis.com/v1beta/models/" + targetModel + ":generateContent?key=" + apiKey;
+
+            java.net.URL url = new java.net.URL(urlString);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            String escapedPrompt = prompt.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
+            String jsonInput = "{\"contents\":[{\"parts\":[{\"text\":\"" + escapedPrompt + "\"}]}]}";
+
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInput.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int code = conn.getResponseCode();
+            if (code == 200) {
+                try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line.trim());
+                    }
+                    String raw = response.toString();
+                    int textIdx = raw.indexOf("\"text\":");
+                    if (textIdx != -1) {
+                        String extracted = raw.substring(textIdx + 7).trim();
+                        if (extracted.startsWith("\"")) {
+                            extracted = extracted.substring(1);
+                            int endQuote = extracted.indexOf("\"");
+                            if (endQuote != -1) {
+                                extracted = extracted.substring(0, endQuote);
+                            }
+                        }
+                        return extracted.replace("\\n", "\n").replace("\\\"", "\"");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Gemini API call notice: " + e.getMessage());
+        }
+        return null;
     }
 
     private boolean isGreeting(String query) {
