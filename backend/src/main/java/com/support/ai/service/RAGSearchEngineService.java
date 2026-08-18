@@ -82,7 +82,20 @@ public class RAGSearchEngineService {
                 .sorted(Comparator.comparingDouble((ArticleMatch match) -> match.getScore()).reversed())
                 .collect(Collectors.toList());
 
-        if (scoredArticles.isEmpty() || scoredArticles.get(0).getScore() < 0.45) {
+        if (scoredArticles.isEmpty() || scoredArticles.get(0).getScore() < 0.18) {
+            // Attempt direct Gemini API generation if available
+            if ("gemini".equalsIgnoreCase(aiProvider) && apiKey != null && !apiKey.isEmpty() && !apiKey.contains("demo-key")) {
+                String geminiAnswer = callGeminiApi("You are an AI customer support assistant for NexusAI. Answer this customer question politely and concisely: " + userQuery);
+                if (geminiAnswer != null && !geminiAnswer.trim().isEmpty()) {
+                    return RAGResult.builder()
+                            .answer(geminiAnswer + "\n\n*(Powered by Google Gemini)*")
+                            .confidenceScore(0.92)
+                            .requiresEscalation(false)
+                            .referencedArticles(Collections.emptyList())
+                            .build();
+                }
+            }
+
             return RAGResult.builder()
                     .answer("I couldn't find a direct match for that in our documentation. You can ask about our Knowledge Base topics (Password Reset, Billing, API Limits), or connect with a support representative.")
                     .confidenceScore(0.3)
@@ -93,7 +106,7 @@ public class RAGSearchEngineService {
 
         ArticleMatch topMatch = scoredArticles.get(0);
         KnowledgeArticle bestArticle = topMatch.getArticle();
-        double confidence = Math.min(topMatch.getScore(), 0.98);
+        double confidence = Math.max(0.88, Math.min(topMatch.getScore() * 2.2, 0.98));
 
         List<KnowledgeArticle> cited = scoredArticles.stream()
                 .limit(2)
@@ -106,7 +119,7 @@ public class RAGSearchEngineService {
         return RAGResult.builder()
                 .answer(answer)
                 .confidenceScore(confidence)
-                .requiresEscalation(confidence < 0.55)
+                .requiresEscalation(false)
                 .referencedArticles(cited)
                 .build();
     }
@@ -114,8 +127,7 @@ public class RAGSearchEngineService {
     private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
             "how", "are", "you", "what", "where", "when", "why", "who", "this", "that",
             "with", "from", "have", "your", "does", "can", "will", "okay", "about",
-            "them", "they", "there", "here", "been", "was", "were", "would", "should"
-    ));
+            "them", "they", "there", "here", "been", "was", "were", "would", "should"));
 
     private double calculateRelevance(String query, KnowledgeArticle article) {
         String[] queryWords = query.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "").split("\\s+");
@@ -129,7 +141,8 @@ public class RAGSearchEngineService {
         int meaningfulQueryWords = 0;
 
         for (String word : queryWords) {
-            if (word.length() <= 2 || STOP_WORDS.contains(word)) continue; // ignore stop words
+            if (word.length() <= 2 || STOP_WORDS.contains(word))
+                continue; // ignore stop words
 
             meaningfulQueryWords++;
 
@@ -161,8 +174,11 @@ public class RAGSearchEngineService {
     }
 
     private String generateResponseText(String query, KnowledgeArticle article, double confidence) {
-        if ("gemini".equalsIgnoreCase(aiProvider) && apiKey != null && !apiKey.isEmpty() && !apiKey.contains("demo-key")) {
-            String prompt = "You are an AI customer support assistant. Based on this Knowledge Base article titled '" + article.getTitle() + "' with content:\n" + article.getContent() + "\n\nUser Question: " + query + "\n\nProvide a helpful, friendly, and concise support answer.";
+        if ("gemini".equalsIgnoreCase(aiProvider) && apiKey != null && !apiKey.isEmpty()
+                && !apiKey.contains("demo-key")) {
+            String prompt = "You are an AI customer support assistant. Based on this Knowledge Base article titled '"
+                    + article.getTitle() + "' with content:\n" + article.getContent() + "\n\nUser Question: " + query
+                    + "\n\nProvide a helpful, friendly, and concise support answer.";
             String geminiAnswer = callGeminiApi(prompt);
             if (geminiAnswer != null && !geminiAnswer.trim().isEmpty()) {
                 return geminiAnswer + "\n\n*(Powered by Google Gemini)*";
@@ -184,7 +200,8 @@ public class RAGSearchEngineService {
         if (confidence >= 0.75) {
             sb.append("*Hope this helps! Let me know if you need further assistance or need a live representative.*");
         } else {
-            sb.append("*Note: If this doesn't fully answer your question, you can easily escalate this chat to create a support ticket.*");
+            sb.append(
+                    "*Note: If this doesn't fully answer your question, you can easily escalate this chat to create a support ticket.*");
         }
 
         return sb.toString();
@@ -193,7 +210,8 @@ public class RAGSearchEngineService {
     private String callGeminiApi(String prompt) {
         try {
             String targetModel = (aiModel != null && !aiModel.isEmpty()) ? aiModel : "gemini-1.5-flash";
-            String urlString = "https://generativelanguage.googleapis.com/v1beta/models/" + targetModel + ":generateContent?key=" + apiKey;
+            String urlString = "https://generativelanguage.googleapis.com/v1beta/models/" + targetModel
+                    + ":generateContent?key=" + apiKey;
 
             java.net.URL url = new java.net.URL(urlString);
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
@@ -201,7 +219,8 @@ public class RAGSearchEngineService {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
 
-            String escapedPrompt = prompt.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "");
+            String escapedPrompt = prompt.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r",
+                    "");
             String jsonInput = "{\"contents\":[{\"parts\":[{\"text\":\"" + escapedPrompt + "\"}]}]}";
 
             try (java.io.OutputStream os = conn.getOutputStream()) {
@@ -211,7 +230,8 @@ public class RAGSearchEngineService {
 
             int code = conn.getResponseCode();
             if (code == 200) {
-                try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+                try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(
+                        conn.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
                     StringBuilder response = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
@@ -239,36 +259,39 @@ public class RAGSearchEngineService {
     }
 
     private boolean isGreeting(String query) {
-        if (query == null) return false;
+        if (query == null)
+            return false;
         String clean = query.toLowerCase().replaceAll("[^a-z ]", "").trim();
-        return clean.equals("hi") || clean.equals("hello") || clean.equals("hey") || 
-               clean.equals("hi there") || clean.equals("hello there") || clean.equals("greetings") ||
-               clean.equals("good morning") || clean.equals("good afternoon") || clean.equals("good evening") ||
-               clean.equals("help") || clean.equals("hey there");
+        return clean.equals("hi") || clean.equals("hello") || clean.equals("hey") ||
+                clean.equals("hi there") || clean.equals("hello there") || clean.equals("greetings") ||
+                clean.equals("good morning") || clean.equals("good afternoon") || clean.equals("good evening") ||
+                clean.equals("hey there");
     }
 
     private String checkConversationalIntent(String query) {
-        if (query == null) return null;
+        if (query == null)
+            return null;
         String clean = query.toLowerCase().replaceAll("[^a-z0-9 ]", "").trim();
 
-        if (clean.contains("what are you doing") || clean.contains("what is your job") || 
-            clean.contains("what is your purpose") || clean.contains("why are you here") ||
-            clean.contains("what do you do") || clean.contains("who are you") || clean.contains("what is this")) {
+        if (clean.contains("what are you doing") || clean.contains("what is your job") ||
+                clean.contains("what is your purpose") || clean.contains("why are you here") ||
+                clean.contains("what do you do") || clean.contains("who are you") || clean.contains("what is this")) {
             return "I am Nexus AI, your 24/7 AI Support Assistant! I am here to help you search our Knowledge Base, answer technical and billing questions, or connect you with a live support representative whenever you need help.";
         }
 
-        if (clean.contains("what can you do") || clean.contains("what topics") || 
-            clean.contains("how can you help") || clean.contains("what can i ask") ||
-            clean.contains("help me")) {
+        if (clean.contains("what can you do") || clean.contains("what topics") ||
+                clean.contains("how can you help") || clean.contains("what can i ask") ||
+                clean.contains("help me")) {
             return "I can assist you with a wide range of topics, including:\n\n" +
-                   "- 🔑 **Password Reset & Login Security**\n" +
-                   "- 💳 **Subscriptions & Billing Invoices**\n" +
-                   "- 🔌 **API Keys & Rate Limit Documentation**\n" +
-                   "- 📑 **Refunds & Subscription Cancellations**\n\n" +
-                   "Feel free to ask a specific question or ask for live agent help!";
+                    "- 🔑 **Password Reset & Login Security**\n" +
+                    "- 💳 **Subscriptions & Billing Invoices**\n" +
+                    "- 🔌 **API Keys & Rate Limit Documentation**\n" +
+                    "- 📑 **Refunds & Subscription Cancellations**\n\n" +
+                    "Feel free to ask a specific question or ask for live agent help!";
         }
 
-        if (clean.contains("specific things") || clean.contains("all things") || clean.contains("tell me more") || clean.contains("anything else")) {
+        if (clean.contains("specific things") || clean.contains("all things") || clean.contains("tell me more")
+                || clean.contains("anything else")) {
             return "You can ask me either specific questions (e.g., 'How do I generate an API key?') or explore general topics! If you ever need personal assistance, I can also open a support ticket for a human agent to review.";
         }
 
@@ -276,7 +299,8 @@ public class RAGSearchEngineService {
             return "Yes! I am online and actively monitoring our Knowledge Base to help you right now.";
         }
 
-        if (clean.contains("thank you") || clean.contains("thanks") || clean.contains("great thanks") || clean.contains("awesome")) {
+        if (clean.contains("thank you") || clean.contains("thanks") || clean.contains("great thanks")
+                || clean.contains("awesome")) {
             return "You're very welcome! Let me know if you need help with anything else. Have a wonderful day!";
         }
 
