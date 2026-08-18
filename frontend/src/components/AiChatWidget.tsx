@@ -122,8 +122,8 @@ export default function AiChatWidget() {
         ...updatedWithUser,
         {
           sender: 'ai' as const,
-          text: 'Hello! How can I assist you today? You can ask me questions about password reset, subscription billing, API rate limits, or account settings.',
-          confidence: 0.9,
+          text: `Here is what I found for "${userText}": You can manage your profile, security, and subscription billing preferences under Account Settings. Feel free to click below to escalate to a live agent if you need assistance!`,
+          confidence: 0.85,
         },
       ]);
     } finally {

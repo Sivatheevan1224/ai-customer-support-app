@@ -8,6 +8,8 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        'Bypass-Tunnel-Reminder': 'true',
+        'bypass-tunnel-reminder': 'true',
         ...(options?.headers || {}),
       },
     });
