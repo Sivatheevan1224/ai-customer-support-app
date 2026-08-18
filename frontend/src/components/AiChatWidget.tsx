@@ -80,36 +80,37 @@ export default function AiChatWidget() {
         if (geminiApiKey) {
           const geminiRes = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  parts: [
-                    {
-                      text: `You are an AI customer support assistant for NexusAI. Answer this customer question politely and concisely. If it is a greeting like "hello" or "hi", respond warmly. Question: ${userText}`,
-                    },
-                  ],
-                },
-              ],
-            }),
-          }
-        );
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: `You are an AI customer support assistant for NexusAI. Answer this customer question politely and concisely. If it is a greeting like "hello" or "hi", respond warmly. Question: ${userText}`,
+                      },
+                    ],
+                  },
+                ],
+              }),
+            }
+          );
 
-        if (geminiRes.ok) {
-          const data = await geminiRes.json();
-          const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (aiText && aiText.trim()) {
-            saveMessages([
-              ...updatedWithUser,
-              {
-                sender: 'ai' as const,
-                text: aiText.trim() + '\n\n*(Powered by Gemini AI Direct Fallback)*',
-                confidence: 0.95,
-              },
-            ]);
-            return;
+          if (geminiRes.ok) {
+            const data = await geminiRes.json();
+            const aiText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (aiText && aiText.trim()) {
+              saveMessages([
+                ...updatedWithUser,
+                {
+                  sender: 'ai' as const,
+                  text: aiText.trim() + '\n\n*(Powered by Gemini AI Direct Fallback)*',
+                  confidence: 0.95,
+                },
+              ]);
+              return;
+            }
           }
         }
       } catch (geminiErr) {
