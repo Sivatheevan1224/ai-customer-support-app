@@ -81,6 +81,10 @@ export const api = {
     return fetchJson<Ticket>(url, { method: 'PUT' });
   },
 
+  deleteTicket: async (id: number): Promise<void> => {
+    await fetch(`${API_BASE_URL}/tickets/${id}`, { method: 'DELETE' });
+  },
+
   getTicketMessages: async (id: number): Promise<TicketMessage[]> => {
     return fetchJson<TicketMessage[]>(`${API_BASE_URL}/tickets/${id}/messages`);
   },

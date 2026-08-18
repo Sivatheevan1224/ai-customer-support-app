@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Bot, Send, User, Sparkles, AlertCircle, FileText, ChevronRight, CheckCircle2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bot, Send, User, Sparkles, AlertCircle, FileText, ChevronRight, CheckCircle2, RefreshCw, Trash2 } from 'lucide-react';
 import { api } from '../services/api';
 import { KnowledgeArticle, RAGResult } from '../types';
 
@@ -17,32 +17,67 @@ export default function AiChatWidget() {
   const [customerEmail, setCustomerEmail] = useState('user@example.com');
   const [escalated, setEscalated] = useState(false);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('nexus_ai_chat_history');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      } catch (e) {
+        console.warn('Failed to parse saved chat history');
+      }
+    }
+  }, []);
+
+  const saveMessages = (newMsgs: Array<{ sender: 'user' | 'ai'; text: string; confidence?: number; articles?: KnowledgeArticle[] }>) => {
+    setMessages(newMsgs);
+    try {
+      localStorage.setItem('nexus_ai_chat_history', JSON.stringify(newMsgs));
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
+  };
+
+  const handleClearChat = () => {
+    const initial = [
+      {
+        sender: 'ai' as const,
+        text: 'Hello! I am your AI Support Assistant powered by our Knowledge Base. How can I help you today?',
+      },
+    ];
+    setMessages(initial);
+    localStorage.removeItem('nexus_ai_chat_history');
+    setEscalated(false);
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
     const userText = input.trim();
     setInput('');
-    setMessages((prev) => [...prev, { sender: 'user', text: userText }]);
+    const updatedWithUser = [...messages, { sender: 'user' as const, text: userText }];
+    saveMessages(updatedWithUser);
     setLoading(true);
 
     try {
       const ragRes: RAGResult = await api.askAiChatbot(userText, customerEmail);
-      setMessages((prev) => [
-        ...prev,
+      saveMessages([
+        ...updatedWithUser,
         {
-          sender: 'ai',
+          sender: 'ai' as const,
           text: ragRes.answer,
           confidence: ragRes.confidenceScore,
           articles: ragRes.referencedArticles,
         },
       ]);
     } catch (err) {
-      // Fallback response if offline
-      setMessages((prev) => [
-        ...prev,
+      saveMessages([
+        ...updatedWithUser,
         {
-          sender: 'ai',
+          sender: 'ai' as const,
           text: 'I checked our Knowledge Base for: "' + userText + '". For instant password reset, click "Forgot Password" on the login screen. Or click below to escalate to a live agent!',
           confidence: 0.85,
         },
@@ -58,10 +93,11 @@ export default function AiChatWidget() {
     try {
       await api.createTicket({
         title: lastUserMsg,
-        description: `Customer escalated from AI Chat Widget.\n\nConversation log:\n` + messages.map((m) => `${m.sender.toUpperCase()}: ${m.text}`).join('\n'),
+        description: `Customer escalated from AI Chat Widget. Conversation log: ${messages.slice(-3).map((m) => `${m.sender.toUpperCase()}: ${m.text}`).join(' | ')}`,
         customerEmail: customerEmail,
         customerName: 'Customer Chat User',
         priority: 'HIGH',
+        status: 'OPEN',
         category: 'AI Escalation',
       });
       setEscalated(true);
@@ -85,9 +121,20 @@ export default function AiChatWidget() {
             <p className="text-xs text-slate-400">RAG Semantic Search & Live Escalation</p>
           </div>
         </div>
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-          Online
-        </span>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleClearChat}
+            title="Clear Chat History"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700/50 transition-all text-xs flex items-center gap-1"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span className="text-[10px]">Clear</span>
+          </button>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            Online
+          </span>
+        </div>
       </div>
 
       {/* Messages Scroll Area */}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Send, Bot, User, Sparkles, CheckCircle, Clock, Tag, AlertCircle, FileText, CornerDownLeft, Shield } from 'lucide-react';
+import { X, Send, Bot, User, Sparkles, CheckCircle, Clock, Tag, AlertCircle, FileText, CornerDownLeft, Shield, Trash2 } from 'lucide-react';
 import { Ticket, TicketMessage, CopilotAnalysis } from '../types';
 import { PriorityBadge, SentimentBadge } from './PriorityBadge';
 import { api } from '../services/api';
@@ -79,6 +79,20 @@ export default function TicketDetailModal({ ticket, isOpen, onClose, onTicketUpd
     setNewMessage(reply);
   };
 
+  const handleDeleteTicket = async () => {
+    if (window.confirm(`Are you sure you want to delete ticket #${ticket.id}? This action cannot be undone.`)) {
+      try {
+        await api.deleteTicket(ticket.id);
+        onTicketUpdated();
+        onClose();
+      } catch (err) {
+        console.error('Failed to delete ticket:', err);
+        onTicketUpdated();
+        onClose();
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-5xl w-full h-[90vh] flex flex-col shadow-2xl overflow-hidden">
@@ -111,6 +125,15 @@ export default function TicketDetailModal({ ticket, isOpen, onClose, onTicketUpd
                 </button>
               ))}
             </div>
+
+            <button
+              onClick={handleDeleteTicket}
+              title="Delete Ticket"
+              className="p-2 rounded-lg text-rose-400 hover:text-rose-200 hover:bg-rose-500/20 border border-rose-500/30 transition-all flex items-center gap-1.5 text-xs font-medium"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
+            </button>
 
             <button
               onClick={onClose}

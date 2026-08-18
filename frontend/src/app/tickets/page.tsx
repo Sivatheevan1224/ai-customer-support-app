@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Ticket as TicketIcon, Filter, Plus, Sparkles, Search, MessageSquare, Clock, User, Shield } from 'lucide-react';
+import { Ticket as TicketIcon, Filter, Plus, Sparkles, Search, MessageSquare, Clock, User, Shield, Trash2 } from 'lucide-react';
 import { Ticket } from '@/types';
 import { PriorityBadge, SentimentBadge } from '@/components/PriorityBadge';
 import TicketDetailModal from '@/components/TicketDetailModal';
@@ -19,6 +19,18 @@ export default function TicketsPage() {
   useEffect(() => {
     loadTickets();
   }, [filterStatus]);
+
+  const handleDeleteTicketDirect = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (window.confirm(`Delete ticket #${id}?`)) {
+      try {
+        await api.deleteTicket(id);
+        loadTickets();
+      } catch (err) {
+        loadTickets();
+      }
+    }
+  };
 
   const loadTickets = async () => {
     setLoading(true);
@@ -199,9 +211,18 @@ export default function TicketsPage() {
                     <Sparkles className="w-3 h-3 mr-1" /> AI Solved
                   </span>
                 ) : (
-                  <span className="text-indigo-400 font-medium group-hover:underline">
-                    View Ticket →
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={(e) => handleDeleteTicketDirect(e, t.id)}
+                      title="Delete Ticket"
+                      className="p-1 rounded text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-indigo-400 font-medium group-hover:underline">
+                      View Ticket →
+                    </span>
+                  </div>
                 )}
               </div>
             </div>

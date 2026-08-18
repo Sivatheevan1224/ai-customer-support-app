@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Search, Plus, ThumbsUp, ThumbsDown, Eye, Sparkles, Filter, Tag, Layers, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Search, Plus, ThumbsUp, ThumbsDown, Eye, Sparkles, Filter, Tag, Layers, CheckCircle2, Trash2 } from 'lucide-react';
 import { KnowledgeArticle } from '@/types';
 import KnowledgeArticleModal from '@/components/KnowledgeArticleModal';
 import { api } from '@/services/api';
@@ -18,6 +18,19 @@ export default function KnowledgePage() {
   useEffect(() => {
     loadArticles();
   }, []);
+
+  const handleDeleteArticle = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this Knowledge Base article?')) {
+      try {
+        await api.deleteArticle(id);
+        loadArticles();
+      } catch (err) {
+        console.error('Failed to delete article:', err);
+        loadArticles();
+      }
+    }
+  };
 
   const loadArticles = async () => {
     setLoading(true);
@@ -240,6 +253,13 @@ export default function KnowledgePage() {
                 </div>
 
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={(e) => handleDeleteArticle(article.id, e)}
+                    title="Delete Article"
+                    className="p-1 rounded bg-slate-950 hover:bg-rose-950 text-slate-400 hover:text-rose-400 border border-slate-800 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                   <button
                     onClick={(e) => handleVote(article.id, true, e)}
                     className="flex items-center gap-1 px-2 py-1 rounded bg-slate-950 hover:bg-emerald-950 text-slate-400 hover:text-emerald-400 border border-slate-800 transition-all"

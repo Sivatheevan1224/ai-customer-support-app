@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Eye, ThumbsUp, ThumbsDown, BookOpen, Tag, Layers } from 'lucide-react';
+import { X, Save, Eye, ThumbsUp, ThumbsDown, BookOpen, Tag, Layers, Trash2 } from 'lucide-react';
 import { KnowledgeArticle } from '../types';
 import { api } from '../services/api';
 
@@ -37,6 +37,22 @@ export default function KnowledgeArticleModal({ article, isOpen, onClose, onSave
   }, [article, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleDelete = async () => {
+    if (article?.id && window.confirm(`Are you sure you want to delete "${article.title}"?`)) {
+      setLoading(true);
+      try {
+        await api.deleteArticle(article.id);
+        onSaved();
+        onClose();
+      } catch (err) {
+        onSaved();
+        onClose();
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,22 +196,34 @@ export default function KnowledgeArticleModal({ article, isOpen, onClose, onSave
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-4 flex items-center justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              {loading ? 'Saving...' : 'Save Article'}
-            </button>
+          <div className="pt-4 flex items-center justify-between">
+            {article?.id ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-200 hover:bg-rose-500/20 border border-rose-500/30 transition-all flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" /> Delete Article
+              </button>
+            ) : <div />}
+
+            <div className="flex items-center space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {loading ? 'Saving...' : 'Save Article'}
+              </button>
+            </div>
           </div>
         </form>
 
