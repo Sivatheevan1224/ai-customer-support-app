@@ -6,6 +6,7 @@ import { Bot, Ticket, BookOpen, MessageSquareText, Sparkles, ArrowRight, ShieldC
 import AnalyticsCharts from '@/components/AnalyticsCharts';
 import { AnalyticsSummary } from '@/types';
 import { api } from '@/services/api';
+import PageGuideHeader from '@/components/PageGuideHeader';
 
 export default function OverviewPage() {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -29,6 +30,19 @@ export default function OverviewPage() {
   return (
     <div className="space-y-8">
       
+      {/* Page Purpose & How to Use Guide */}
+      <PageGuideHeader
+        title="Overview & Analytics Control Center"
+        subtitle="Operations & Telemetry"
+        badgeText="Page Guide & System Hub"
+        description="This dashboard provides high-level operations telemetry, real-time AI deflection statistics, customer satisfaction ratings, and fast navigation to all core platform features."
+        howToUse={[
+          "Monitor System Telemetry: Track total tickets solved automatically by AI vs escalated tickets.",
+          "Analyze Category Distribution: Inspect volume by category (Authentication, Billing, API) to optimize support staffing.",
+          "Quick Navigation: Use the action buttons below to test the AI Widget or jump to Agent Workspace."
+        ]}
+      />
+
       {/* Hero Banner */}
       <div className="relative rounded-3xl bg-gradient-to-r from-indigo-900 via-slate-900 to-purple-950 p-8 border border-indigo-500/20 shadow-2xl overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>

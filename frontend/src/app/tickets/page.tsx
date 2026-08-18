@@ -6,6 +6,7 @@ import { Ticket } from '@/types';
 import { PriorityBadge, SentimentBadge } from '@/components/PriorityBadge';
 import TicketDetailModal from '@/components/TicketDetailModal';
 import { api } from '@/services/api';
+import PageGuideHeader from '@/components/PageGuideHeader';
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -58,10 +59,10 @@ export default function TicketsPage() {
           description: 'Our webhook endpoint receives 401 response during HMAC-SHA256 signature verification. Is header format standard?',
           customerEmail: 'alex.dev@startup.io',
           customerName: 'Alex Rivera',
-          priority: 'URGENT',
+          priority: 'HIGH',
           status: 'IN_PROGRESS',
           category: 'API & Integration',
-          sentiment: 'URGENT',
+          sentiment: 'NEUTRAL',
           aiSummary: 'Developer reported HMAC signature verification failure on API webhooks.',
           assignedAgent: 'Marcus Vance',
         },
@@ -92,6 +93,19 @@ export default function TicketsPage() {
   return (
     <div className="space-y-6">
       
+      {/* Page Purpose & How to Use Guide */}
+      <PageGuideHeader
+        title="Agent Ticket Command Workspace"
+        subtitle="Human Agent Resolution & AI Copilot"
+        badgeText="Support Staff Workspace"
+        description="This workspace is designed for human customer support representatives. Review escalated tickets, inspect AI sentiment analysis, and utilize AI Copilot suggested replies to resolve issues efficiently."
+        howToUse={[
+          "Select a Ticket: Click any ticket card from the list below to open the AI Copilot Detail Modal.",
+          "Inspect AI Analysis: Review customer sentiment (FRUSTRATED, URGENT) and AI-generated summary.",
+          "Send AI Draft Reply: Click 'Use AI Suggested Reply' to respond to the customer in 1-click."
+        ]}
+      />
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
         <div>

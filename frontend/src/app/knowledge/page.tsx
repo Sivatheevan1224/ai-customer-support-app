@@ -5,6 +5,7 @@ import { BookOpen, Search, Plus, ThumbsUp, ThumbsDown, Eye, Sparkles, Filter, Ta
 import { KnowledgeArticle } from '@/types';
 import KnowledgeArticleModal from '@/components/KnowledgeArticleModal';
 import { api } from '@/services/api';
+import PageGuideHeader from '@/components/PageGuideHeader';
 
 export default function KnowledgePage() {
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
@@ -109,6 +110,19 @@ export default function KnowledgePage() {
   return (
     <div className="space-y-6">
       
+      {/* Page Purpose & How to Use Guide */}
+      <PageGuideHeader
+        title="Knowledge Base Intelligence Base"
+        subtitle="RAG Context Repository"
+        badgeText="Knowledge Base Management"
+        description="This page allows support administrators to create, edit, publish, and structure reference help articles. Published articles are automatically indexed by the Spring Boot RAG Search Engine to provide accurate answers to customer questions."
+        howToUse={[
+          "Browse Articles: Search or filter articles by category (Authentication, Billing, API & Integration).",
+          "Create Help Documentation: Click '+ Create New Article' to add troubleshooting steps and tags.",
+          "Vote & Analytics: View helpful vs unhelpful votes and view counts to refine knowledge content."
+        ]}
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-800">
         <div>

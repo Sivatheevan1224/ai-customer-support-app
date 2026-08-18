@@ -3,10 +3,24 @@
 import React from 'react';
 import { Bot, MessageSquareText, Sparkles, ShieldCheck, HelpCircle } from 'lucide-react';
 import AiChatWidget from '@/components/AiChatWidget';
+import PageGuideHeader from '@/components/PageGuideHeader';
 
 export default function WidgetDemoPage() {
   return (
     <div className="space-y-8">
+      
+      {/* Page Purpose & How to Use Guide */}
+      <PageGuideHeader
+        title="Customer AI Chatbot Simulation"
+        subtitle="End-User RAG Widget"
+        badgeText="Customer Experience Simulator"
+        description="This interactive widget demo simulates the end-customer chat experience. Customers can ask questions, receive real-time answers grounded in your Knowledge Base, and escalate to human agents if needed."
+        howToUse={[
+          "Test Knowledge Questions: Type 'How do I reset my password?' to view AI answers with article citations & confidence scores.",
+          "Test Friendly Greetings: Type 'hello' to see friendly AI greeting responses without ticket escalation.",
+          "Test Live Escalation: Ask an unlisted question or click 'Escalate to Live Agent' to verify ticket creation on the Agent Board."
+        ]}
+      />
       
       {/* Header */}
       <div className="pb-4 border-b border-slate-800 space-y-1">
