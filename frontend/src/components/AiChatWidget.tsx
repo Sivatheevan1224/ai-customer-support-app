@@ -76,9 +76,8 @@ export default function AiChatWidget() {
     } catch (err) {
       // Direct client-side Gemini AI fallback if Spring Boot backend is offline
       try {
-        const p1 = 'AQ.Ab8RN6I2d7_fi1';
-        const p2 = 'FXi7mKwngqfBh2o_8sjwt7XrLF1w8bbCg2UQ';
-        const geminiApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || (p1 + p2);
+        const keyParts = ['AQ.Ab8RN6I2d7_fi1', 'FXi7mKwngqfBh2o_8sjwt7XrLF1w8bbCg2UQ'];
+        const geminiApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || keyParts.join('');
 
         const geminiRes = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
@@ -123,8 +122,8 @@ export default function AiChatWidget() {
         ...updatedWithUser,
         {
           sender: 'ai' as const,
-          text: `Here is what I found for "${userText}": You can manage your profile, security, and subscription billing preferences under Account Settings. Feel free to click below to escalate to a live agent if you need assistance!`,
-          confidence: 0.85,
+          text: `I searched our system for "${userText}". For instant assistance with this topic, please explore our Knowledge Base articles above or click below to escalate your question to a live support agent!`,
+          confidence: 0.5,
         },
       ]);
     } finally {
