@@ -101,6 +101,12 @@ public class RAGSearchEngineService {
                 .build();
     }
 
+    private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
+            "how", "are", "you", "what", "where", "when", "why", "who", "this", "that",
+            "with", "from", "have", "your", "does", "can", "will", "okay", "about",
+            "them", "they", "there", "here", "been", "was", "were", "would", "should"
+    ));
+
     private double calculateRelevance(String query, KnowledgeArticle article) {
         String[] queryWords = query.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "").split("\\s+");
         String title = article.getTitle().toLowerCase();
@@ -110,9 +116,12 @@ public class RAGSearchEngineService {
 
         double score = 0.0;
         int matchedWords = 0;
+        int meaningfulQueryWords = 0;
 
         for (String word : queryWords) {
-            if (word.length() <= 2) continue; // ignore short stop words
+            if (word.length() <= 2 || STOP_WORDS.contains(word)) continue; // ignore stop words
+
+            meaningfulQueryWords++;
 
             if (title.contains(word)) {
                 score += 0.35;
@@ -131,9 +140,11 @@ public class RAGSearchEngineService {
             }
         }
 
-        if (queryWords.length > 0) {
-            double coverage = (double) matchedWords / queryWords.length;
+        if (meaningfulQueryWords > 0) {
+            double coverage = (double) matchedWords / meaningfulQueryWords;
             score = (score * 0.7) + (coverage * 0.3);
+        } else {
+            return 0.0;
         }
 
         return Math.min(score, 1.0);
@@ -223,7 +234,10 @@ public class RAGSearchEngineService {
         return clean.equals("hi") || clean.equals("hello") || clean.equals("hey") || 
                clean.equals("hi there") || clean.equals("hello there") || clean.equals("greetings") ||
                clean.equals("good morning") || clean.equals("good afternoon") || clean.equals("good evening") ||
-               clean.equals("help") || clean.equals("hey there");
+               clean.equals("help") || clean.equals("hey there") || clean.equals("how are you") ||
+               clean.equals("are you ok") || clean.equals("are you okay") || clean.equals("who are you") ||
+               clean.equals("what is your name") || clean.equals("are you a bot") || clean.equals("are you ai") ||
+               clean.equals("what can you do") || clean.equals("thank you") || clean.equals("thanks");
     }
 
     public static class ArticleMatch {
