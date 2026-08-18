@@ -43,6 +43,26 @@ export default function OverviewPage() {
         ]}
       />
 
+      {/* Ongoing Project & Development Notice Banner */}
+      <div className="rounded-2xl bg-gradient-to-r from-amber-950/50 via-slate-900 to-indigo-950/50 border border-amber-500/30 p-4 text-amber-300 flex items-center justify-between shadow-lg backdrop-blur-md">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 animate-pulse">
+            <Zap className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-amber-200">🚀 Active Development & Ongoing Project</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Work In Progress
+              </span>
+            </div>
+            <p className="text-xs text-amber-300/80 mt-0.5">
+              This platform is actively under development. Features, RAG vector indexes, and AI copilot capabilities are continuously being updated and expanded!
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Banner */}
       <div className="relative rounded-3xl bg-gradient-to-r from-indigo-900 via-slate-900 to-purple-950 p-8 border border-indigo-500/20 shadow-2xl overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
